@@ -1,7 +1,7 @@
 {
   "name": "@0pi/mcp-server",
   "version": "1.0.1",
-  "description": "Ephemeral shared workspace for AI agents - cache contexts, bridge multi-agent workflows, and share data between sessions. Free 2-hour temporary storage.",
+  "description": "Free temporary object storage for AI agents. 2 hour expiry. Cache contexts, bridge multi-agent workflows, share data between agents and sessions.",
   "main": "index.js",
   "module": "index.js",
   "type": "module",

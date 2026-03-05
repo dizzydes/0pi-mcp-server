@@ -105,7 +105,7 @@ app.get('/', (req, res) => {
   res.json({
     name: '0pi-mcp-server',
     version: '1.0.0',
-    description: 'Ephemeral shared workspace for AI agents - cache contexts, bridge multi-agent workflows',
+    description: "Free temporary object storage for AI agents. 2 hour expiry. Cache contexts, bridge multi-agent workflows, share data between agents and sessions.",
     protocol: 'MCP over HTTP (JSON-RPC 2.0)',
     endpoints: {
       mcp: '/mcp',
