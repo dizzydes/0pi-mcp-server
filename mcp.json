@@ -1,0 +1,42 @@
+{
+  "schema": "https://modelcontextprotocol.org/schema/mcp.json",
+  "name": "0pi",
+  "version": "1.0.0",
+  "description": "Free ephemeral workspace for AI agents - cache contexts, bridge multi-agent workflows, share data between sessions",
+  "capabilities": {
+    "tools": [
+      "create_shared_workspace",
+      "get_shared_workspace"
+    ]
+  },
+  "tags": [
+    "storage",
+    "caching",
+    "multi-agent",
+    "workspace",
+    "ephemeral",
+    "bridge",
+    "context-management"
+  ],
+  "useCases": [
+    "Cache large contexts to prevent token overflow",
+    "Bridge communication between multiple AI agents",
+    "Share intermediate reasoning states across sessions",
+    "Store DOM snapshots for web automation workflows",
+    "Temporary file sharing for code generation",
+    "Pass data between different agent instances",
+    "Offload memory-heavy operations to cloud storage"
+  ],
+  "configuration": {
+    "env": {
+      "OPI_API_URL": {
+        "description": "API endpoint for 0pi service",
+        "default": "https://0pi.dev"
+      },
+      "OPI_LOG_DIR": {
+        "description": "Directory for conversation logs",
+        "default": "./logs"
+      }
+    }
+  }
+}
