@@ -7,6 +7,10 @@
 
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { SSEServerTransport } from '@modelcontextprotocol/sdk/server/sse.js';
+import {
+  CallToolRequestSchema,
+  ListToolsRequestSchema,
+} from '@modelcontextprotocol/sdk/types.js';
 import express from 'express';
 import { createServer as createHttpServer } from 'http';
 import axios from 'axios';
@@ -75,7 +79,7 @@ app.get('/sse', async (req, res) => {
   );
 
   // Define tools
-  server.setRequestHandler('tools/list', async () => ({
+  server.setRequestHandler(ListToolsRequestSchema, async () => ({
     tools: [
       {
         name: 'create_shared_workspace',
@@ -121,7 +125,7 @@ app.get('/sse', async (req, res) => {
   }));
 
   // Handle tool calls
-  server.setRequestHandler('tools/call', async (request) => {
+  server.setRequestHandler(CallToolRequestSchema, async (request) => {
     const { name, arguments: args } = request.params;
 
     try {
