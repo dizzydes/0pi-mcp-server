@@ -2,17 +2,11 @@
 
 /**
  * HTTP Server wrapper for 0pi MCP Server
- * Exposes MCP over HTTP for hosted deployments (Railway, etc)
+ * Exposes MCP over HTTP using JSON-RPC for hosted deployments
  */
 
-import { Server } from '@modelcontextprotocol/sdk/server/index.js';
-import { SSEServerTransport } from '@modelcontextprotocol/sdk/server/sse.js';
-import {
-  CallToolRequestSchema,
-  ListToolsRequestSchema,
-} from '@modelcontextprotocol/sdk/types.js';
 import express from 'express';
-import { createServer as createHttpServer } from 'http';
+import cors from 'cors';
 import axios from 'axios';
 import * as dotenv from 'dotenv';
 
@@ -52,140 +46,177 @@ async function getWorkspace(workspace_id) {
   return response.data;
 }
 
+// Tool definitions
+const TOOLS = [
+  {
+    name: 'create_shared_workspace',
+    description: 'Cache & share agent contexts - Save your current reasoning state, large JSON structures, or DOM elements to an ephemeral cloud workspace. Perfect for: caching large contexts before token limits, bridging multi-agent workflows, storing intermediate results, sharing data between sessions, or temporary code/data storage. Returns a shareable URL valid for 2 hours with auto-expiring data.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        agent_id: {
+          type: 'string',
+          description: 'Your agent identifier (e.g., "claude-coder", "gpt-researcher")'
+        },
+        data: {
+          description: 'The payload to save - can be an object, array, or string'
+        },
+        intent: {
+          type: 'string',
+          description: 'Brief description of why you are saving this context'
+        },
+        ttl_seconds: {
+          type: 'number',
+          description: 'Time-to-live in seconds (max 7200 = 2 hours)',
+          default: 7200
+        }
+      },
+      required: ['agent_id', 'data']
+    }
+  },
+  {
+    name: 'get_shared_workspace',
+    description: 'Retrieve data from a shared workspace using its ID.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        workspace_id: {
+          type: 'string',
+          description: 'The workspace ID (8-character identifier)'
+        }
+      },
+      required: ['workspace_id']
+    }
+  }
+];
+
 // Create Express app
 const app = express();
-app.use(express.json());
+app.use(cors());
+app.use(express.json({ limit: '50mb' }));
 
 // Health check endpoint
 app.get('/health', (req, res) => {
-  res.json({ status: 'healthy', service: '0pi-mcp-server' });
+  res.json({ status: 'healthy', service: '0pi-mcp-server', version: '1.0.0' });
 });
 
-// SSE endpoint for MCP
-app.get('/sse', async (req, res) => {
-  console.log('New SSE connection');
-  
-  const transport = new SSEServerTransport('/message', res);
-  const server = new Server(
-    {
-      name: '0pi-mcp-server',
-      version: '1.0.0',
+// MCP Server info endpoint
+app.get('/', (req, res) => {
+  res.json({
+    name: '0pi-mcp-server',
+    version: '1.0.0',
+    description: 'Ephemeral shared workspace for AI agents - cache contexts, bridge multi-agent workflows',
+    protocol: 'MCP over HTTP (JSON-RPC 2.0)',
+    endpoints: {
+      mcp: '/mcp',
+      health: '/health'
     },
-    {
-      capabilities: {
-        tools: {},
-      },
-    }
-  );
-
-  // Define tools
-  server.setRequestHandler(ListToolsRequestSchema, async () => ({
-    tools: [
-      {
-        name: 'create_shared_workspace',
-        description: 'Cache & share agent contexts - Save your current reasoning state, large JSON structures, or DOM elements to an ephemeral cloud workspace. Perfect for: caching large contexts before token limits, bridging multi-agent workflows, storing intermediate results, sharing data between sessions, or temporary code/data storage. Returns a shareable URL valid for 2 hours with auto-expiring data.',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            agent_id: {
-              type: 'string',
-              description: 'Your agent identifier (e.g., "claude-coder", "gpt-researcher")'
-            },
-            data: {
-              description: 'The payload to save - can be an object, array, or string'
-            },
-            intent: {
-              type: 'string',
-              description: 'Brief description of why you are saving this context'
-            },
-            ttl_seconds: {
-              type: 'number',
-              description: 'Time-to-live in seconds (max 7200 = 2 hours)',
-              default: 7200
-            }
-          },
-          required: ['agent_id', 'data']
-        }
-      },
-      {
-        name: 'get_shared_workspace',
-        description: 'Retrieve data from a shared workspace using its ID.',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            workspace_id: {
-              type: 'string',
-              description: 'The workspace ID (8-character identifier)'
-            }
-          },
-          required: ['workspace_id']
-        }
-      }
-    ]
-  }));
-
-  // Handle tool calls
-  server.setRequestHandler(CallToolRequestSchema, async (request) => {
-    const { name, arguments: args } = request.params;
-
-    try {
-      if (name === 'create_shared_workspace') {
-        const { agent_id, data, intent, ttl_seconds = 7200 } = args;
-        const result = await createSharedWorkspace(agent_id, data, intent, ttl_seconds);
-        
-        return {
-          content: [{
-            type: 'text',
-            text: JSON.stringify({
-              success: true,
-              workspace_id: result.workspace_id,
-              url: result.url,
-              expires_in: result.expires_in,
-              message: `Workspace created: ${result.url}`
-            }, null, 2)
-          }]
-        };
-      }
-
-      if (name === 'get_shared_workspace') {
-        const { workspace_id } = args;
-        const data = await getWorkspace(workspace_id);
-        
-        return {
-          content: [{
-            type: 'text',
-            text: JSON.stringify({ success: true, data }, null, 2)
-          }]
-        };
-      }
-
-      throw new Error(`Unknown tool: ${name}`);
-    } catch (error) {
-      return {
-        content: [{
-          type: 'text',
-          text: JSON.stringify({ success: false, error: error.message }, null, 2)
-        }],
-        isError: true
-      };
-    }
+    tools: TOOLS.map(t => ({ name: t.name, description: t.description }))
   });
-
-  await server.connect(transport);
 });
 
-// POST endpoint for messages
-app.post('/message', (req, res) => {
-  // This is handled by the SSE transport
-  res.status(200).end();
+// Main MCP endpoint - JSON-RPC over HTTP
+app.post('/mcp', async (req, res) => {
+  const { jsonrpc, id, method, params } = req.body;
+
+  console.log(`MCP Request: ${method}`, params ? JSON.stringify(params).substring(0, 100) : '');
+
+  // Validate JSON-RPC
+  if (jsonrpc !== '2.0') {
+    return res.status(400).json({
+      jsonrpc: '2.0',
+      id: id || null,
+      error: { code: -32600, message: 'Invalid Request - jsonrpc must be "2.0"' }
+    });
+  }
+
+  try {
+    let result;
+
+    switch (method) {
+      case 'initialize':
+        result = {
+          protocolVersion: '2024-11-05',
+          capabilities: {
+            tools: {}
+          },
+          serverInfo: {
+            name: '0pi-mcp-server',
+            version: '1.0.0'
+          }
+        };
+        break;
+
+      case 'tools/list':
+        result = { tools: TOOLS };
+        break;
+
+      case 'tools/call':
+        const { name, arguments: args } = params;
+        
+        if (name === 'create_shared_workspace') {
+          const { agent_id, data, intent, ttl_seconds = 7200 } = args;
+          const workspace = await createSharedWorkspace(agent_id, data, intent, ttl_seconds);
+          
+          result = {
+            content: [{
+              type: 'text',
+              text: JSON.stringify({
+                success: true,
+                workspace_id: workspace.workspace_id,
+                url: workspace.url,
+                expires_in: workspace.expires_in,
+                message: `Workspace created successfully. Share this URL with other agents: ${workspace.url}`
+              }, null, 2)
+            }]
+          };
+        } else if (name === 'get_shared_workspace') {
+          const { workspace_id } = args;
+          const data = await getWorkspace(workspace_id);
+          
+          result = {
+            content: [{
+              type: 'text',
+              text: JSON.stringify({ success: true, data }, null, 2)
+            }]
+          };
+        } else {
+          throw new Error(`Unknown tool: ${name}`);
+        }
+        break;
+
+      default:
+        return res.status(400).json({
+          jsonrpc: '2.0',
+          id,
+          error: { code: -32601, message: `Method not found: ${method}` }
+        });
+    }
+
+    res.json({
+      jsonrpc: '2.0',
+      id,
+      result
+    });
+
+  } catch (error) {
+    console.error('MCP Error:', error.message);
+    res.status(500).json({
+      jsonrpc: '2.0',
+      id,
+      error: {
+        code: -32603,
+        message: error.message,
+        data: { stack: error.stack }
+      }
+    });
+  }
 });
 
 // Start server
-const httpServer = createHttpServer(app);
-
-httpServer.listen(PORT, () => {
-  console.log(`🚀 0pi MCP Server (HTTP) running on port ${PORT}`);
-  console.log(`📡 SSE endpoint: http://localhost:${PORT}/sse`);
+app.listen(PORT, () => {
+  console.log(`🚀 0pi MCP Server (HTTP/JSON-RPC) running on port ${PORT}`);
+  console.log(`🔌 MCP endpoint: http://localhost:${PORT}/mcp`);
   console.log(`💚 Health check: http://localhost:${PORT}/health`);
   console.log(`🔗 API Base: ${API_BASE_URL}`);
 });
