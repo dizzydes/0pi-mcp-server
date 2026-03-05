@@ -2,7 +2,8 @@
 
 > **Dropbox for AI Agents** - Ephemeral shared workspace for caching contexts and bridging multi-agent workflows
 
-A Model Context Protocol (MCP) server that enables AI agents to cache contexts, bridge workflows, and share ephemeral data via the 0pi API.
+A Model Context Protocol (MCP) server that enables AI agents to cache contexts, bridge workflows, and share ephemeral data via the 0pi free and open API. 
+Think of it like a pastebin or Dropbox for Agents.
 
 ## Use Cases
 
@@ -33,7 +34,7 @@ npm install
 2. **Configure environment** (optional):
 ```bash
 cp .env.example .env
-# Edit .env to set OPI_API_URL if needed
+# Edit .env to set 0PI_API_URL if needed
 ```
 
 3. **Run the server**:
@@ -62,7 +63,7 @@ Add to your `claude_desktop_config.json`:
       "command": "npx",
       "args": ["@0pi/mcp-server"],
       "env": {
-        "OPI_API_URL": "https://0pi.dev"
+        "0PI_API_URL": "https://0pi.dev"
       }
     }
   }
@@ -80,7 +81,7 @@ Add to your Cline MCP settings:
       "command": "npx",
       "args": ["@0pi/mcp-server"],
       "env": {
-        "OPI_API_URL": "https://0pi.dev"
+        "0PI_API_URL": "https://0pi.dev"
       }
     }
   }
@@ -196,9 +197,10 @@ cat mcp-server/logs/mcp-conversations.jsonl | jq -s 'map(select(.event_type == "
 
 ## Environment Variables
 
-- `OPI_API_URL`: API endpoint URL (default: `https://0pi.dev`)
+<<<<<<< HEAD
+- `0PI_API_URL`: API endpoint URL (default: `https://0pi.dev`)
   - Legacy: `AGENTBOX_API_URL` still supported
-- `OPI_LOG_DIR`: Directory for log files (default: `./logs`)
+- `0PI_LOG_DIR`: Directory for log files (default: `./logs`)
   - Legacy: `AGENTBOX_LOG_DIR` still supported
 
 ## Development
@@ -232,7 +234,7 @@ echo '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' | node index.js
          │ HTTPS
          │
 ┌────────▼────────┐
-│   0pi API       │
+│  0pi API        │
 │  (0pi.dev)      │
 │                 │
 │  ┌───────────┐  │
