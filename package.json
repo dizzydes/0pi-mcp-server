@@ -3,6 +3,7 @@
   "version": "1.0.1",
   "description": "Ephemeral shared workspace for AI agents - cache contexts, bridge multi-agent workflows, and share data between sessions. Free 2-hour temporary storage.",
   "main": "index.js",
+  "module": "index.js",
   "type": "module",
   "bin": {
     "0pi-mcp": "./index.js"

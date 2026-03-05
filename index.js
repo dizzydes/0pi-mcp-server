@@ -15,23 +15,37 @@ import * as dotenv from 'dotenv';
 // Load environment variables
 dotenv.config();
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+// Get __dirname equivalent for ESM (will be undefined in CJS transpiled code)
+let __filename, __dirname;
+try {
+  __filename = fileURLToPath(import.meta.url);
+  __dirname = dirname(__filename);
+} catch (e) {
+  // Running in transpiled mode (Smithery scan), skip file path resolution
+  __dirname = process.cwd();
+}
 
 // Configuration
 const API_BASE_URL = process.env.OPI_API_URL || process.env.AGENTBOX_API_URL || 'https://0pi.dev';
-const LOG_DIR = process.env.OPI_LOG_DIR || process.env.AGENTBOX_LOG_DIR || join(__dirname, 'logs');
-const LOG_FILE = join(LOG_DIR, 'mcp-conversations.jsonl');
+const LOG_DIR = process.env.OPI_LOG_DIR || process.env.AGENTBOX_LOG_DIR || (__dirname ? join(__dirname, 'logs') : './logs');
+const LOG_FILE = LOG_DIR ? join(LOG_DIR, 'mcp-conversations.jsonl') : null;
 
-// Ensure log directory exists
-if (!existsSync(LOG_DIR)) {
-  mkdirSync(LOG_DIR, { recursive: true });
+// Ensure log directory exists (only if LOG_FILE is defined)
+if (LOG_FILE && !existsSync(LOG_DIR)) {
+  try {
+    mkdirSync(LOG_DIR, { recursive: true });
+  } catch (e) {
+    // Skip in sandbox mode
+  }
 }
 
 /**
  * Log an MCP conversation event to JSONL file
  */
 function logEvent(eventType, data = {}) {
+  // Skip logging if no LOG_FILE (sandbox mode)
+  if (!LOG_FILE) return;
+  
   const timestamp = new Date().toISOString();
   const logEntry = {
     timestamp,
@@ -49,7 +63,7 @@ function logEvent(eventType, data = {}) {
   try {
     appendFileSync(LOG_FILE, JSON.stringify(logEntry) + '\n');
   } catch (err) {
-    console.error('Failed to write log:', err);
+    // Silently fail in sandbox mode
   }
 }
 
@@ -130,24 +144,31 @@ async function getWorkspace(workspace_id) {
   }
 }
 
-// Create MCP server
-const server = new Server(
-  {
-    name: '0pi-mcp-server',
-    version: '1.0.0',
-  },
-  {
-    capabilities: {
-      tools: {},
-    },
-  }
-);
-
-// List available tools
-server.setRequestHandler(ListToolsRequestSchema, async () => {
-  logEvent('tools_listed');
+/**
+ * Create and configure the MCP server
+ */
+function createServer(options = {}) {
+  const isSandbox = options.sandbox || false;
   
-  return {
+  const server = new Server(
+    {
+      name: '0pi-mcp-server',
+      version: '1.0.0',
+    },
+    {
+      capabilities: {
+        tools: {},
+      },
+    }
+  );
+
+  // List available tools
+  server.setRequestHandler(ListToolsRequestSchema, async () => {
+    if (!isSandbox) {
+      logEvent('tools_listed');
+    }
+    
+    return {
     tools: [
       {
         name: 'create_shared_workspace',
@@ -273,8 +294,21 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   }
 });
 
+  return server;
+}
+
+/**
+ * Create a sandbox server for Smithery scanning
+ * This allows Smithery to inspect capabilities without needing real API access
+ */
+export function createSandboxServer() {
+  return createServer({ sandbox: true });
+}
+
 // Start the server
 async function main() {
+  const server = createServer();
+  
   logEvent('server_started', {
     metadata: { api_base_url: API_BASE_URL, log_file: LOG_FILE }
   });

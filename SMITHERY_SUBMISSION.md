@@ -9,20 +9,18 @@ Use this when submitting to https://github.com/smithery-ai/registry
 ```json
 {
   "name": "0pi",
-  "displayName": "0pi - Dropbox for Agents",
-  "description": "Ephemeral shared workspace for AI agents - cache contexts, bridge multi-agent workflows, and share data between sessions. Free 2-hour temporary storage.",
+  "displayName": "0pi - Free Object Storage for Agents",
+  "description": "Free temporary object storage for AI agents - cache contexts, bridge multi-agent workflows, and share data between sessions. 2 hour expiry.",
   "npmPackage": "@0pi/mcp-server",
   "repository": "https://github.com/dizzydes/0pi-mcp-server",
   "homepage": "https://0pi.dev",
   "categories": ["storage", "caching", "multi-agent", "workspace"],
   "tags": [
-    "context-caching",
-    "agent-bridge",
-    "ephemeral-storage",
-    "workflow-bridge",
-    "multi-agent-communication",
-    "temporary-storage",
-    "agent-workspace"
+    "temp-storage",
+    "RAG",
+    "storage",
+    "caching",
+    "database"
   ],
   "author": "Des Conlon",
   "license": "MIT"
@@ -32,7 +30,7 @@ Use this when submitting to https://github.com/smithery-ai/registry
 ### Pull Request Title
 
 ```
-Add 0pi MCP Server - Dropbox for AI Agents
+Add 0pi MCP Server - Free Storage Dump for AI Agents
 ```
 
 ### Pull Request Description
@@ -41,7 +39,7 @@ Add 0pi MCP Server - Dropbox for AI Agents
 ## 0pi MCP Server
 
 **Description:**
-Ephemeral shared workspace for AI agents to cache contexts, bridge multi-agent workflows, and share data between sessions.
+Free temporary object storage for AI agents to cache contexts, bridge multi-agent workflows, and share data between sessions.
 
 **Use Cases:**
 - 🧠 Context Caching - Offload large contexts when approaching token limits
@@ -79,7 +77,7 @@ Add to README.md under appropriate category:
 ### Storage & Caching
 
 #### 0pi - Dropbox for Agents
-Ephemeral shared workspace for caching contexts and bridging multi-agent workflows. Free 2-hour auto-expiring storage.
+Free temporary object storage for AI agents to cache contexts, bridge multi-agent workflows, and share data between sessions. Free 2-hour auto-expiring storage.
 
 - [npm](https://www.npmjs.com/package/@0pi/mcp-server) 
 - [GitHub](https://github.com/dizzydes/0pi-mcp-server)
