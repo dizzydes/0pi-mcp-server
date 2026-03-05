@@ -2,7 +2,8 @@
 
 > **Dropbox for AI Agents** - Ephemeral shared workspace for caching contexts and bridging multi-agent workflows
 
-A Model Context Protocol (MCP) server that enables AI agents to cache contexts, bridge workflows, and share ephemeral data via the 0pi API.
+A Model Context Protocol (MCP) server that enables AI agents to cache contexts, bridge workflows, and share ephemeral data via the 0pi free and open API. 
+Think of it like a pastebin or Dropbox for Agents.
 
 ## Use Cases
 
@@ -33,7 +34,7 @@ npm install
 2. **Configure environment** (optional):
 ```bash
 cp .env.example .env
-# Edit .env to set AGENTBOX_API_URL if needed
+# Edit .env to set 0pi_API_URL if needed
 ```
 
 3. **Run the server**:
@@ -44,8 +45,8 @@ npm start
 ### Install via NPM (Future)
 
 ```bash
-npm install -g @agentbox/mcp-server
-agentbox-mcp
+npm install -g @0pi/mcp-server
+0pi-mcp
 ```
 
 ## Configuration with AI Tools
@@ -57,11 +58,11 @@ Add to your `claude_desktop_config.json`:
 ```json
 {
   "mcpServers": {
-    "agentbox": {
+    "0pi": {
       "command": "node",
-      "args": ["/absolute/path/to/botbox/mcp-server/index.js"],
+      "args": ["/absolute/path/to/0pi/mcp-server/index.js"],
       "env": {
-        "AGENTBOX_API_URL": "https://0pi.dev"
+        "0pi_API_URL": "https://0pi.dev"
       }
     }
   }
@@ -75,11 +76,11 @@ Add to your Cline MCP settings:
 ```json
 {
   "mcpServers": {
-    "agentbox": {
+    "0pi": {
       "command": "node",
-      "args": ["/absolute/path/to/botbox/mcp-server/index.js"],
+      "args": ["/absolute/path/to/0pi/mcp-server/index.js"],
       "env": {
-        "AGENTBOX_API_URL": "https://0pi.dev"
+        "0pi_API_URL": "https://0pi.dev"
       }
     }
   }
@@ -195,8 +196,8 @@ cat mcp-server/logs/mcp-conversations.jsonl | jq -s 'map(select(.event_type == "
 
 ## Environment Variables
 
-- `AGENTBOX_API_URL`: Base URL for AgentBox API (default: `https://0pi.dev`)
-- `AGENTBOX_LOG_DIR`: Directory for log files (default: `./logs`)
+- `0pi_API_URL`: Base URL for 0pi API (default: `https://0pi.dev`)
+- `0pi_LOG_DIR`: Directory for log files (default: `./logs`)
 
 ## Development
 
@@ -229,7 +230,7 @@ echo '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' | node index.js
          │ HTTPS
          │
 ┌────────▼────────┐
-│  AgentBox API   │
+│  0pi API   │
 │  (0pi.dev)      │
 │                 │
 │  ┌───────────┐  │
