@@ -49,8 +49,8 @@ async function getWorkspace(workspace_id) {
 // Tool definitions
 const TOOLS = [
   {
-    name: 'create_shared_workspace',
-    description: 'Cache & share agent contexts - Save your current reasoning state, large JSON structures, or DOM elements to an ephemeral cloud workspace. Perfect for: caching large contexts before token limits, bridging multi-agent workflows, storing intermediate results, sharing data between sessions, or temporary code/data storage. Returns a shareable URL valid for 2 hours with auto-expiring data.',
+    name: 'create_object',
+    description: 'Save objects to ephemeral cloud storage - Store your reasoning state, large JSON structures, or any data to get a shareable URL. Perfect for: caching contexts before token limits, bridging multi-agent workflows, storing intermediate results, sharing data between sessions, or temporary data storage. Returns a shareable URL valid for 2 hours with auto-expiring data.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -59,11 +59,11 @@ const TOOLS = [
           description: 'Your agent identifier (e.g., "claude-coder", "gpt-researcher")'
         },
         data: {
-          description: 'The payload to save - can be an object, array, or string'
+          description: 'The data to save - can be an object, array, or string'
         },
         intent: {
           type: 'string',
-          description: 'Brief description of why you are saving this context'
+          description: 'Brief description of why you are saving this data'
         },
         ttl_seconds: {
           type: 'number',
@@ -75,17 +75,17 @@ const TOOLS = [
     }
   },
   {
-    name: 'get_shared_workspace',
-    description: 'Retrieve data from a shared workspace using its ID.',
+    name: 'get_object',
+    description: 'Retrieve data from cloud storage using its ID.',
     inputSchema: {
       type: 'object',
       properties: {
-        workspace_id: {
+        object_id: {
           type: 'string',
-          description: 'The workspace ID (8-character identifier)'
+          description: 'The object ID (8-character identifier)'
         }
       },
-      required: ['workspace_id']
+      required: ['object_id']
     }
   }
 ];
@@ -154,25 +154,26 @@ app.post('/mcp', async (req, res) => {
       case 'tools/call':
         const { name, arguments: args } = params;
         
-        if (name === 'create_shared_workspace') {
+        if (name === 'create_object' || name === 'create_shared_workspace') {
           const { agent_id, data, intent, ttl_seconds = 7200 } = args;
-          const workspace = await createSharedWorkspace(agent_id, data, intent, ttl_seconds);
+          const result_data = await createSharedWorkspace(agent_id, data, intent, ttl_seconds);
           
           result = {
             content: [{
               type: 'text',
               text: JSON.stringify({
                 success: true,
-                workspace_id: workspace.workspace_id,
-                url: workspace.url,
-                expires_in: workspace.expires_in,
-                message: `Workspace created successfully. Share this URL with other agents: ${workspace.url}`
+                object_id: result_data.workspace_id,
+                url: result_data.url,
+                expires_in: result_data.expires_in,
+                message: `Object saved successfully. Share this URL: ${result_data.url}`
               }, null, 2)
             }]
           };
-        } else if (name === 'get_shared_workspace') {
-          const { workspace_id } = args;
-          const data = await getWorkspace(workspace_id);
+        } else if (name === 'get_object' || name === 'get_shared_workspace') {
+          const { object_id, workspace_id } = args;
+          const id = object_id || workspace_id;
+          const data = await getWorkspace(id);
           
           result = {
             content: [{

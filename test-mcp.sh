@@ -67,49 +67,49 @@ echo "Part 2: Tool Execution Tests"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 
-# Test 3: Create Workspace (stdio)
-echo -e "${GREEN}Test 3: Create Workspace (stdio)${NC}"
-STDIO_RESPONSE=$(echo '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"create_shared_workspace","arguments":{"agent_id":"test-stdio","data":{"test":"stdio data","timestamp":"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'"},"intent":"Testing stdio MCP server"}}}' | node index.js 2>&1 | grep -v "^0pi MCP Server" | grep -v "^API Base URL" | grep -v "^Logging to")
+# Test 3: Create Object (stdio)
+echo -e "${GREEN}Test 3: Create Object (stdio)${NC}"
+STDIO_RESPONSE=$(echo '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"create_object","arguments":{"agent_id":"test-stdio","data":{"test":"stdio data","timestamp":"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'"},"intent":"Testing stdio MCP server"}}}' | node index.js 2>&1 | grep -v "^0pi MCP Server" | grep -v "^API Base URL" | grep -v "^Logging to")
 
 echo "$STDIO_RESPONSE"
 echo ""
 
-# Extract workspace ID from stdio response using jq if available, otherwise grep
+# Extract object ID from stdio response using jq if available, otherwise grep
 if command -v jq &> /dev/null; then
-    STDIO_WORKSPACE_ID=$(echo "$STDIO_RESPONSE" | jq -r '.result.content[0].text' | jq -r '.workspace_id')
+    STDIO_OBJECT_ID=$(echo "$STDIO_RESPONSE" | jq -r '.result.content[0].text' | jq -r '.object_id')
 else
-    STDIO_WORKSPACE_ID=$(echo "$STDIO_RESPONSE" | grep -o 'workspace_id[^,]*' | head -1 | sed 's/.*: *"\([^"]*\)".*/\1/')
+    STDIO_OBJECT_ID=$(echo "$STDIO_RESPONSE" | grep -o 'object_id[^,]*' | head -1 | sed 's/.*: *"\([^"]*\)".*/\1/')
 fi
-echo -e "${GREEN}✓ Created stdio workspace: $STDIO_WORKSPACE_ID${NC}"
+echo -e "${GREEN}✓ Created stdio object: $STDIO_OBJECT_ID${NC}"
 echo ""
 
-# Test 4: Create Workspace (HTTP)
-echo -e "${GREEN}Test 4: Create Workspace (HTTP)${NC}"
+# Test 4: Create Object (HTTP)
+echo -e "${GREEN}Test 4: Create Object (HTTP)${NC}"
 HTTP_RESPONSE=$(curl -s -X POST "$HTTP_URL" \
     -H "Content-Type: application/json" \
-    -d '{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"create_shared_workspace","arguments":{"agent_id":"test-http","data":{"test":"http data","timestamp":"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'","deployment":"Railway"},"intent":"Testing HTTP MCP server"}}}')
+    -d '{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"create_object","arguments":{"agent_id":"test-http","data":{"test":"http data","timestamp":"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'","deployment":"Railway"},"intent":"Testing HTTP MCP server"}}}')
 
 echo "$HTTP_RESPONSE"
 echo ""
 
-# Extract workspace ID from HTTP response using jq if available, otherwise grep
+# Extract object ID from HTTP response using jq if available, otherwise grep
 if command -v jq &> /dev/null; then
-    HTTP_WORKSPACE_ID=$(echo "$HTTP_RESPONSE" | jq -r '.result.content[0].text' | jq -r '.workspace_id')
+    HTTP_OBJECT_ID=$(echo "$HTTP_RESPONSE" | jq -r '.result.content[0].text' | jq -r '.object_id')
 else
-    HTTP_WORKSPACE_ID=$(echo "$HTTP_RESPONSE" | grep -o 'workspace_id[^,]*' | head -1 | sed 's/.*: *"\([^"]*\)".*/\1/')
+    HTTP_OBJECT_ID=$(echo "$HTTP_RESPONSE" | grep -o 'object_id[^,]*' | head -1 | sed 's/.*: *"\([^"]*\)".*/\1/')
 fi
-echo -e "${GREEN}✓ Created HTTP workspace: $HTTP_WORKSPACE_ID${NC}"
+echo -e "${GREEN}✓ Created HTTP object: $HTTP_OBJECT_ID${NC}"
 echo ""
 
-# Test 5: Retrieve Workspace (stdio)
-echo -e "${GREEN}Test 5: Retrieve Workspace (stdio) - ID: $STDIO_WORKSPACE_ID${NC}"
-test_stdio "Get workspace" \
-    '{"jsonrpc":"2.0","id":5,"method":"tools/call","params":{"name":"get_shared_workspace","arguments":{"workspace_id":"'$STDIO_WORKSPACE_ID'"}}}'
+# Test 5: Retrieve Object (stdio)
+echo -e "${GREEN}Test 5: Retrieve Object (stdio) - ID: $STDIO_OBJECT_ID${NC}"
+test_stdio "Get object" \
+    '{"jsonrpc":"2.0","id":5,"method":"tools/call","params":{"name":"get_object","arguments":{"object_id":"'$STDIO_OBJECT_ID'"}}}'
 
-# Test 6: Retrieve Workspace (HTTP)
-echo -e "${GREEN}Test 6: Retrieve Workspace (HTTP) - ID: $HTTP_WORKSPACE_ID${NC}"
-test_http "Get workspace" \
-    '{"jsonrpc":"2.0","id":6,"method":"tools/call","params":{"name":"get_shared_workspace","arguments":{"workspace_id":"'$HTTP_WORKSPACE_ID'"}}}'
+# Test 6: Retrieve Object (HTTP)
+echo -e "${GREEN}Test 6: Retrieve Object (HTTP) - ID: $HTTP_OBJECT_ID${NC}"
+test_http "Get object" \
+    '{"jsonrpc":"2.0","id":6,"method":"tools/call","params":{"name":"get_object","arguments":{"object_id":"'$HTTP_OBJECT_ID'"}}}'
 
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "Part 3: Error Handling Tests"
@@ -124,12 +124,12 @@ test_http "Invalid method" \
 # Test 8: Missing Parameters
 echo -e "${GREEN}Test 8: Missing Required Parameters (should fail gracefully)${NC}"
 test_http "Missing agent_id" \
-    '{"jsonrpc":"2.0","id":8,"method":"tools/call","params":{"name":"create_shared_workspace","arguments":{"data":"test"}}}'
+    '{"jsonrpc":"2.0","id":8,"method":"tools/call","params":{"name":"create_object","arguments":{"data":"test"}}}'
 
-# Test 9: Invalid Workspace ID
-echo -e "${GREEN}Test 9: Invalid Workspace ID (should return error)${NC}"
-test_http "Invalid workspace ID" \
-    '{"jsonrpc":"2.0","id":9,"method":"tools/call","params":{"name":"get_shared_workspace","arguments":{"workspace_id":"invalid123"}}}'
+# Test 9: Invalid Object ID
+echo -e "${GREEN}Test 9: Invalid Object ID (should return error)${NC}"
+test_http "Invalid object ID" \
+    '{"jsonrpc":"2.0","id":9,"method":"tools/call","params":{"name":"get_object","arguments":{"object_id":"invalid123"}}}'
 
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "Part 4: Deployment Health Checks"
@@ -156,9 +156,9 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 echo ""
 echo -e "${GREEN}✅ All tests completed!${NC}"
 echo ""
-echo "Workspace URLs created during testing:"
-echo "  - stdio: https://0pi.dev/w/$STDIO_WORKSPACE_ID"
-echo "  - HTTP:  https://0pi.dev/w/$HTTP_WORKSPACE_ID"
+echo "Object URLs created during testing:"
+echo "  - stdio: https://0pi.dev/w/$STDIO_OBJECT_ID"
+echo "  - HTTP:  https://0pi.dev/w/$HTTP_OBJECT_ID"
 echo ""
 echo "View logs:"
 echo "  cat logs/mcp-conversations.jsonl | tail -20 | jq ."
