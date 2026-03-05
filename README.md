@@ -33,7 +33,7 @@ npm install
 2. **Configure environment** (optional):
 ```bash
 cp .env.example .env
-# Edit .env to set AGENTBOX_API_URL if needed
+# Edit .env to set OPI_API_URL if needed
 ```
 
 3. **Run the server**:
@@ -41,11 +41,12 @@ cp .env.example .env
 npm start
 ```
 
-### Install via NPM (Future)
+### Install via NPM
 
 ```bash
-npm install -g @agentbox/mcp-server
-agentbox-mcp
+npm install -g @0pi/mcp-server
+# or use npx
+npx @0pi/mcp-server
 ```
 
 ## Configuration with AI Tools
@@ -57,11 +58,11 @@ Add to your `claude_desktop_config.json`:
 ```json
 {
   "mcpServers": {
-    "agentbox": {
-      "command": "node",
-      "args": ["/absolute/path/to/botbox/mcp-server/index.js"],
+    "0pi": {
+      "command": "npx",
+      "args": ["@0pi/mcp-server"],
       "env": {
-        "AGENTBOX_API_URL": "https://0pi.dev"
+        "OPI_API_URL": "https://0pi.dev"
       }
     }
   }
@@ -75,11 +76,11 @@ Add to your Cline MCP settings:
 ```json
 {
   "mcpServers": {
-    "agentbox": {
-      "command": "node",
-      "args": ["/absolute/path/to/botbox/mcp-server/index.js"],
+    "0pi": {
+      "command": "npx",
+      "args": ["@0pi/mcp-server"],
       "env": {
-        "AGENTBOX_API_URL": "https://0pi.dev"
+        "OPI_API_URL": "https://0pi.dev"
       }
     }
   }
@@ -195,8 +196,10 @@ cat mcp-server/logs/mcp-conversations.jsonl | jq -s 'map(select(.event_type == "
 
 ## Environment Variables
 
-- `AGENTBOX_API_URL`: Base URL for AgentBox API (default: `https://0pi.dev`)
-- `AGENTBOX_LOG_DIR`: Directory for log files (default: `./logs`)
+- `OPI_API_URL`: API endpoint URL (default: `https://0pi.dev`)
+  - Legacy: `AGENTBOX_API_URL` still supported
+- `OPI_LOG_DIR`: Directory for log files (default: `./logs`)
+  - Legacy: `AGENTBOX_LOG_DIR` still supported
 
 ## Development
 
@@ -222,14 +225,14 @@ echo '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' | node index.js
 │  (this package) │
 │                 │
 │  ┌───────────┐  │
-│  │  SQLite   │  │ (Local logging)
-│  │   Log     │  │
+│  │   JSONL   │  │ (Local logging)
+│  │   Logs    │  │
 │  └───────────┘  │
 └────────┬────────┘
          │ HTTPS
          │
 ┌────────▼────────┐
-│  AgentBox API   │
+│   0pi API       │
 │  (0pi.dev)      │
 │                 │
 │  ┌───────────┐  │
