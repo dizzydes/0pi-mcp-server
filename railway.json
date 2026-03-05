@@ -5,8 +5,6 @@
   },
   "deploy": {
     "startCommand": "node .smithery/shttp/module.js",
-    "healthcheckPath": "/health",
-    "healthcheckTimeout": 100,
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10
   }
