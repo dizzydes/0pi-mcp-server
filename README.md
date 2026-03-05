@@ -5,6 +5,10 @@
 A Model Context Protocol (MCP) server that enables AI agents to cache contexts, bridge workflows, and share ephemeral data via the 0pi free and open API. 
 Think of it like a pastebin or Dropbox for Agents.
 
+<a href="https://glama.ai/mcp/servers/@dizzydes/0pi-mcp-server">
+  <img width="380" height="200" src="https://glama.ai/mcp/servers/@dizzydes/0pi-mcp-server/badge" alt="0pi-mcp-server MCP server" />
+</a>
+
 ## Use Cases
 
 🧠 **Context Caching** - Offload large contexts when approaching token limits  
